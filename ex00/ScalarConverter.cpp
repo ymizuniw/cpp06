@@ -246,41 +246,6 @@ void DisplayResults(t_scalar_convert_status sc_stat, t_scalar_values *sc_vals) {
     std::cout << "double: " << "impossible\n";
   else
     std::cout << "double: " << sc_vals->sc_double << "\n";
-
-  //   if (sc_stat == SC_STATUS_MINUS_INF) {
-  //     std::cout << "char: " << "impossible\n";
-  //     std::cout << "int: " << "impossible\n";
-  //     std::cout << "float: " << "-inff\n";
-  //     std::cout << "double: " << "-inf" << std::endl;
-  //   } else if (sc_stat == SC_STATUS_PLUS_INF) {
-  //     std::cout << "char: " << "impossible\n";
-  //     std::cout << "int: " << "impossible\n";
-  //     std::cout << "float: " << "+inff\n";
-  //     std::cout << "double: " << "+inf" << std::endl;
-  //   } else if (sc_stat == SC_STATUS_NANF || sc_stat == SC_STATUS_NAN) {
-  //     std::cout << "char: " << "impossible\n";
-  //     std::cout << "int: " << "impossible\n";
-  //     std::cout << "float: " << "nanf\n";
-  //     std::cout << "double: " << "nan" << std::endl;
-  //   } else {
-  //     if (sc_vals->sc_char_impossible)
-  //       std::cout << "char: " << "impossible" << "\n";
-  //     else if (sc_vals->sc_char_non_print)
-  //       std::cout << "char: " << "Non displayable" << "\n";
-  //     else
-  //       std::cout << "char: " << sc_vals->sc_char << "\n";
-  //     if (sc_vals->sc_int_impossible)
-  //       std::cout << "int: " << "impossible" << "\n";
-  //     else
-  //       std::cout << "int: " << sc_vals->sc_int << "\n";
-  //     if (sc_vals->sc_float_impossible)
-  //       std::cout << "float: " << "impossible" << "\n";
-  //     else
-  //       std::cout << "float: " << sc_vals->sc_float << "f\n";
-  //     if (sc_vals->sc_double_impossible)
-  //       std::cout << "double: " << "impossible" << "\n";
-  //     else
-  //       std::cout << "double: " << sc_vals->sc_double << std::endl;
 }
 
 void ScalarConverter::convert(std::string num) {
