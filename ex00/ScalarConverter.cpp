@@ -1,27 +1,49 @@
 #include "ScalarConverter.hpp"
 #include <cctype>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <limits>
+#include <cstring>
 #include <exception>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
+#include <string>
 
-typedef enum e_scalar_convert_status{
-    SC_STATUS_DOUBLE,
-    SC_STATUS_FLOAT,
-    SC_STATUS_INT,
-    SC_STATUS_CHAR,
-    SC_STATUS_MINUS_INF,
-    SC_STATUS_PLUS_INF,
-    SC_STATUS_NAN,
-    SC_STATUS_ERROR
+typedef enum e_scalar_convert_status {
+  SC_STATUS_CHAR,
+  SC_STATUS_INT,
+  SC_STATUS_FLOAT,
+  SC_STATUS_DOUBLE,
+  SC_STATUS_MINUS_INFF,
+  SC_STATUS_PLUS_INFF,
+  SC_STATUS_MINUS_INF,
+  SC_STATUS_PLUS_INF,
+  SC_STATUS_NANF,
+  SC_STATUS_NAN,
+  SC_STATUS_ERROR
 } t_scalar_convert_status;
+
+typedef struct s_scalar_values {
+  char sc_char;
+  int sc_int;
+  float sc_float;
+  double sc_double;
+  int sc_nanf;
+  int sc_nan;
+  int sc_char_non_print;
+  int sc_char_impossible;
+  int sc_int_impossible;
+  int sc_float_impossible;
+  int sc_double_impossible;
+} t_scalar_values;
 
 //this shoul return the specific types
 t_scalar_convert_status validate_num(std::string num)
 {
     // int part
     size_t i = 0;
+
+    if (num.at(i) == '-' || num.at(i) == '+')
+      i++;
     while(i<num.length())
     {
         if (!std::isdigit(num.at(i)))
@@ -73,114 +95,205 @@ int validate_char(std::string num)
     return (0);
 }
 
+t_scalar_convert_status DetectType(std::string num) {
 
+  t_scalar_convert_status num_type = SC_STATUS_ERROR;
 
-void printResult(int num_type, std::string num)
-{
-    std::stringstream ss_int(num);
-    std::stringstream ss_float(num);
-    std::stringstream ss_double(num);
-    int converted_int = 0;
-    float converted_float = 0.f;
-    double converted_double = 0.0;
-
-    if (num_type==SC_STATUS_MINUS_INF)
-    {
-        std::cout << "char: " << "impossible\n";
-        std::cout << "int: " << "impossible\n";
-        std::cout << "float: " << "-inff\n";
-        std::cout << "double: " << "-inf" << std::endl;
-    }
-    else if (num_type==SC_STATUS_PLUS_INF)
-    {
-        std::cout << "char: " << "impossible\n";
-        std::cout << "int: " << "impossible\n";
-        std::cout << "float: " << "+inff\n";
-        std::cout << "double: " << "+inf" << std::endl;
-    }
-    else if (num_type==SC_STATUS_NAN)
-    {
-        std::cout << "char: " << "impossible\n";
-        std::cout << "int: " << "impossible\n";
-        std::cout << "float: " << "nanf\n";
-        std::cout << "double: " << "nan" << std::endl;
-    }
-    else if (num_type==SC_STATUS_DOUBLE)
-    {
-        
-    }
-    else if (num_type==SC_STATUS_FLOAT)
-    {
-        
-    }
-    else if (num_type==SC_STATUS_INT)
-    {
-        
-    }
-    else if (num_type==SC_STATUS_CHAR)
-    {
-        converted_int = static_cast<int>(num.at(0));
-        converted_float = static_cast<float>(num.at(0));
-        converted_double = static_cast<double>(num.at(0));
-        if (std::isprint(converted_int))
-            std::cout << "char: " << static_cast<unsigned char>(converted_int) << "\n";
-        else
-            std::cout << "char: " << "Non displayable\n";
-        std::cout << "int: " << converted_int << "\n";
-        std::cout << "float: " << converted_float << "f\n";
-        std::cout << "double: " << converted_double << std::endl;
-    }
-    else
-    {
-        std::cout << "[Invalid Argment]: " << num << std::endl;
-    }
+  if (num == "-inff")
+    num_type = SC_STATUS_MINUS_INFF;
+  else if (num == "-inf")
+    num_type = SC_STATUS_MINUS_INF;
+  else if (num == "+inff")
+    num_type = SC_STATUS_PLUS_INFF;
+  else if (num == "+inf")
+    num_type = SC_STATUS_PLUS_INF;
+  else if (num == "nanf")
+    num_type = SC_STATUS_NANF;
+  else if (num == "nan")
+    num_type = SC_STATUS_NANF;
+  else if (validate_char(num))
+    num_type = SC_STATUS_CHAR;
+  else
+    num_type = validate_num(num);
+  return (num_type);
 }
 
-void ScalarConverter::convert(std::string num){
+void ConvertActual(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
+                   std::string num) {
 
-    if (num.empty())
-    {
-        std::cout << "num is empty!" << std::endl;
-        return ;
-    }
+  std::stringstream ss(num);
 
-    //specific cases
-    // 1. -inff OR +inff OR nanf -> only float handles
-    // 2. -inf OR +inf OR nan -> only double handles
-    // 3. the num is more than one characters or non-displayable, char handles it properly.
-    // 4. FLOAT_MIN > num || FLOAT_MAX < num and within double, how does it behave?
-
-//     int num_type = SC_STATUS_ERROR;
-//     double dmax = std::numeric_limits<double>::max();
-//     double dmin = std::numeric_limits<double>::min();
-//     float fmax = std::numeric_limits<float>::max();
-//     float fmin = std::numeric_limits<float>::min();
-
-//     std::stringstream ss_dmax;
-//     std::stringstream ss_dmin;
-//     std::stringstream ss_fmax;
-//     std::stringstream ss_fmin;
-    
-//     ss_dmax<<dmax;
-//     ss_dmin<<dmin;
-//     ss_fmax<<fmax;
-//     ss_fmin<<fmin;
-// // std::cout << num << std::endl;
-//     std::string s_dmax = ss_dmax.str();
-//     std::string s_dmin = ss_dmin.str();
-//     std::string s_fmax = ss_fmax.str();
-//     std::string s_fmin = ss_fmin.str();
-
-    std::cout << fmax << std::endl;
-    if (num=="-inff" || num=="-inf")
-        num_type = SC_STATUS_MINUS_INF;
-    else if (num=="inff" || num=="inf")
-        num_type = SC_STATUS_PLUS_INF;
-    else if (num=="nanf" || num=="nan")
-        num_type = SC_STATUS_NAN;
-    else if (validate_char(num))
-        num_type = SC_STATUS_CHAR;
+  // NORMAL TYPES SWITCH CASE
+  switch (static_cast<int>(sc_stat)) {
+  case SC_STATUS_CHAR:
+    if (!std::isprint(num.at(0)))
+      sc_vals->sc_char_non_print = 1;
     else
-        num_type = validate_num(num);
-    printResult(num_type, num);
+      ss >> sc_vals->sc_char;
+    break;
+  case SC_STATUS_INT:
+    ss >> sc_vals->sc_int;
+    if (ss.fail())
+      sc_vals->sc_int_impossible = 1;
+    break;
+  case SC_STATUS_FLOAT:
+    ss >> sc_vals->sc_float;
+    if (ss.fail())
+      sc_vals->sc_float_impossible = 1;
+    break;
+  case SC_STATUS_DOUBLE:
+    ss >> sc_vals->sc_double;
+    if (ss.fail())
+      sc_vals->sc_double_impossible = 1;
+    break;
+  case SC_STATUS_MINUS_INFF:
+    sc_vals->sc_float = -std::numeric_limits<float>::infinity();
+    break;
+  case SC_STATUS_PLUS_INFF:
+    sc_vals->sc_float = std::numeric_limits<float>::infinity();
+    break;
+  case SC_STATUS_MINUS_INF:
+    sc_vals->sc_double = -std::numeric_limits<double>::infinity();
+    break;
+  case SC_STATUS_PLUS_INF:
+    sc_vals->sc_double = std::numeric_limits<double>::infinity();
+    break;
+  case SC_STATUS_NANF:
+    sc_vals->sc_nanf = 1;
+    break;
+  case SC_STATUS_NAN:
+    sc_vals->sc_nan = 1;
+    break;
+  }
+}
+
+void ConvertOthers(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
+                   std::string num) {
+
+  if (sc_stat == SC_STATUS_MINUS_INFF || sc_stat == SC_STATUS_PLUS_INFF ||
+      sc_stat == SC_STATUS_MINUS_INF || sc_stat == SC_STATUS_PLUS_INF ||
+      sc_stat == SC_STATUS_NANF || sc_stat == SC_STATUS_NAN) {
+    sc_vals->sc_char_impossible = 1;
+    sc_vals->sc_int_impossible = 1;
+    switch (static_cast<int>(sc_stat)) {
+    case SC_STATUS_MINUS_INFF:
+      sc_vals->sc_double = -std::numeric_limits<double>::infinity();
+      break;
+    case SC_STATUS_PLUS_INFF:
+      sc_vals->sc_double = std::numeric_limits<double>::infinity();
+      break;
+    case SC_STATUS_MINUS_INF:
+      sc_vals->sc_float = -std::numeric_limits<float>::infinity();
+      break;
+    case SC_STATUS_PLUS_INF:
+      sc_vals->sc_float = std::numeric_limits<float>::infinity();
+      break;
+    }
+    return;
+  }
+  if (sc_stat != SC_STATUS_CHAR) {
+    std::stringstream ss(num);
+    int sc_char_num;
+    ss >> sc_char_num;
+    if (ss.fail())
+      sc_vals->sc_char_impossible = 1;
+    else if (!std::isprint(static_cast<char>(sc_char_num)))
+      sc_vals->sc_char_non_print = 1;
+    else
+      sc_vals->sc_char = static_cast<char>(sc_char_num);
+  }
+  if (sc_stat != SC_STATUS_INT) {
+    std::stringstream ss(num);
+    ss >> sc_vals->sc_int;
+    if (ss.fail())
+      sc_vals->sc_int_impossible = 1;
+  }
+  if (sc_stat != SC_STATUS_FLOAT) {
+    std::stringstream ss(num);
+    ss >> sc_vals->sc_float;
+    if (ss.fail())
+      sc_vals->sc_float_impossible = 1;
+  }
+  if (sc_stat != SC_STATUS_DOUBLE) {
+    std::stringstream ss(num);
+    ss >> sc_vals->sc_double;
+    if (ss.fail())
+      sc_vals->sc_double_impossible = 1;
+  }
+}
+
+void DisplayResults(t_scalar_convert_status sc_stat, t_scalar_values *sc_vals) {
+
+  (void)sc_stat;
+  if (sc_vals->sc_char_impossible)
+    std::cout << "char: " << "impossible\n";
+  else if (sc_vals->sc_char_non_print)
+    std::cout << "char: " << "Not displayable\n";
+  else
+    std::cout << "char: " << sc_vals->sc_char << "\n";
+
+  if (sc_vals->sc_int_impossible)
+    std::cout << "int: " << "impossible\n";
+  else
+    std::cout << "int: " << sc_vals->sc_int << "\n";
+
+  if (sc_vals->sc_float_impossible)
+    std::cout << "float: " << "impossible\n";
+  else
+    std::cout << "float: " << sc_vals->sc_float << "f\n";
+
+  if (sc_vals->sc_double_impossible)
+    std::cout << "double: " << "impossible\n";
+  else
+    std::cout << "double: " << sc_vals->sc_double << "\n";
+
+  //   if (sc_stat == SC_STATUS_MINUS_INF) {
+  //     std::cout << "char: " << "impossible\n";
+  //     std::cout << "int: " << "impossible\n";
+  //     std::cout << "float: " << "-inff\n";
+  //     std::cout << "double: " << "-inf" << std::endl;
+  //   } else if (sc_stat == SC_STATUS_PLUS_INF) {
+  //     std::cout << "char: " << "impossible\n";
+  //     std::cout << "int: " << "impossible\n";
+  //     std::cout << "float: " << "+inff\n";
+  //     std::cout << "double: " << "+inf" << std::endl;
+  //   } else if (sc_stat == SC_STATUS_NANF || sc_stat == SC_STATUS_NAN) {
+  //     std::cout << "char: " << "impossible\n";
+  //     std::cout << "int: " << "impossible\n";
+  //     std::cout << "float: " << "nanf\n";
+  //     std::cout << "double: " << "nan" << std::endl;
+  //   } else {
+  //     if (sc_vals->sc_char_impossible)
+  //       std::cout << "char: " << "impossible" << "\n";
+  //     else if (sc_vals->sc_char_non_print)
+  //       std::cout << "char: " << "Non displayable" << "\n";
+  //     else
+  //       std::cout << "char: " << sc_vals->sc_char << "\n";
+  //     if (sc_vals->sc_int_impossible)
+  //       std::cout << "int: " << "impossible" << "\n";
+  //     else
+  //       std::cout << "int: " << sc_vals->sc_int << "\n";
+  //     if (sc_vals->sc_float_impossible)
+  //       std::cout << "float: " << "impossible" << "\n";
+  //     else
+  //       std::cout << "float: " << sc_vals->sc_float << "f\n";
+  //     if (sc_vals->sc_double_impossible)
+  //       std::cout << "double: " << "impossible" << "\n";
+  //     else
+  //       std::cout << "double: " << sc_vals->sc_double << std::endl;
+}
+
+void ScalarConverter::convert(std::string num) {
+  t_scalar_convert_status sc_stat = DetectType(num);
+  t_scalar_values *sc_vals = new (t_scalar_values);
+  memset(sc_vals, 0, sizeof(t_scalar_values));
+  try {
+    ConvertActual(sc_vals, sc_stat, num);
+    ConvertOthers(sc_vals, sc_stat, num);
+    DisplayResults(sc_stat, sc_vals);
+  } catch (...) {
+    delete sc_vals;
+    return;
+  }
+  delete sc_vals;
 }

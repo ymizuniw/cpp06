@@ -1,19 +1,19 @@
-NAME=convert
-CXX=c++
-CXXFLAGS=-Wall -Wextra -Werror -std=c++98 -pedantic-errors
+NAME = convert
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -g -std=c++98 -pedantic-errors
 
-SRCS=ScalarConverter.cpp main.cpp
+SRCS = ScalarConverter.cpp main.cpp
 OBJS=$(SRCS:.cpp=.o)
-INC=-I.
+INC = -I.
 
-%.o : %.cpp
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 .PHONEY: all clean fclean re
 
 all: $(NAME)
 
-$(NAME) : $(OBJS)
+$(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INC) -o $@ $^
 
 clean:
@@ -22,6 +22,4 @@ clean:
 fclean:
 	$(RM) $(OBJS) $(NAME)
 
-re:
-	fclean
-	all
+re: fclean all
