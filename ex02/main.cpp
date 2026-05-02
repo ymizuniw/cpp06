@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <exception>
 #include <iostream>
 
 #include "ABC.hpp"
@@ -8,15 +9,15 @@
 #include <ctime>
 #include <typeinfo>
 
+#include <unistd.h>
+
 Base *generate(void){
-  int random = std::rand();
-  if (0 <= random && random < RAND_MAX / 3)
-    return (new (A));
-  else if (RAND_MAX / 3 <= random && random < 2 * (RAND_MAX / 3))
-    return (new (B));
-  else
-    return (new (C));
-  return (NULL);
+  int r = std::rand() % 3;
+  if (r == 0) 
+    return new A();
+  if (r == 1) 
+    return new B();
+  return new C();
 }
 
 void identify(Base *p) {
@@ -59,13 +60,22 @@ void identify(Base &p) {
 }
 
 int main(void) {
-  std::srand(static_cast<unsigned int>(std::time(NULL)));
-  Base *base = generate();
+  // std::srand(static_cast<unsigned int>(std::time(NULL)));
+  std::srand(static_cast<unsigned int>(std::time(NULL))^ static_cast<unsigned int>(std::clock())^ static_cast<unsigned int>(getpid()));
+  Base *base = NULL;
+  try{
+    base = generate();
+  } catch(const std::exception &e){
+    std::cout << e.what() << std::endl;
+    return (1);
+  }
   try {
     identify(base);
     identify(*base);
-  } catch (...) {
+  } catch (const std::exception &e) {
+    std::cout << e.what() << std::endl;
     delete (base);
+    return (1);
   }
   delete (base);
   return (0);

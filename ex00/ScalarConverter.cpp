@@ -358,6 +358,10 @@ void ScalarConverter::convert(std::string num) {
   t_scalar_convert_status sc_stat = DetectType(num);
   t_scalar_values sc_vals = {};
   ConvertActual(&sc_vals, sc_stat, num);
+  /*
+    sc_vals.sc_double_impossible=1 means num (type is double) cannot be double num,
+    then it cannot be converted to other types (impossible).
+  */
   if (sc_vals.sc_double_impossible)
     sc_stat = SC_STATUS_ERROR;
   ConvertOthers(&sc_vals, sc_stat, num);
