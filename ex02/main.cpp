@@ -1,21 +1,24 @@
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <iostream>
-
 #include "ABC.hpp"
 #include "Base.hpp"
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
+#include <exception>
+#include <iostream>
 #include <typeinfo>
-
 #include <unistd.h>
 
-Base *generate(void){
+/*
+    The grounds of this implementation is at 5)b)iii) from:
+    https://en.cppreference.com/cpp/language/dynamic_cast
+*/
+
+Base *generate(void) {
   int r = std::rand() % 3;
-  if (r == 0) 
+  if (r == 0)
     return new A();
-  if (r == 1) 
+  if (r == 1)
     return new B();
   return new C();
 }
@@ -60,12 +63,12 @@ void identify(Base &p) {
 }
 
 int main(void) {
-  // std::srand(static_cast<unsigned int>(std::time(NULL)));
-  std::srand(static_cast<unsigned int>(std::time(NULL))^ static_cast<unsigned int>(std::clock())^ static_cast<unsigned int>(getpid()));
+
+  std::srand(static_cast<unsigned int>(std::time(NULL)));
   Base *base = NULL;
-  try{
+  try {
     base = generate();
-  } catch(const std::exception &e){
+  } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
     return (1);
   }
