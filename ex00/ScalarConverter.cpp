@@ -188,6 +188,12 @@ void ConvertOthers(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
     case SC_STATUS_PLUS_INF:
       sc_vals->sc_float = std::numeric_limits<float>::infinity();
       break;
+    case SC_STATUS_NANF:
+      sc_vals->sc_nan  = 1;
+      break;
+    case SC_STATUS_NAN:
+      sc_vals->sc_nanf = 1;
+      break;
     }
     return;
   }
@@ -203,47 +209,70 @@ void ConvertOthers(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
       sc_vals->sc_char = static_cast<char>(sc_char_num);
   }
   if (sc_stat != SC_STATUS_INT) {
-    std::stringstream ss(num);
-    ss >> sc_vals->sc_int;
-    if (ss.fail())
-      sc_vals->sc_int_impossible = 1;
+    if (sc_stat==SC_STATUS_CHAR)
+    {
+      sc_vals->sc_int = static_cast<int>(num.at(0));//can fail?
+    }
+    else {
+      std::stringstream ss(num);
+      ss >> sc_vals->sc_int;
+      if (ss.fail())
+        sc_vals->sc_int_impossible = 1;
+    }
   }
   if (sc_stat != SC_STATUS_FLOAT) {
-    std::stringstream ss(num);
-    ss >> sc_vals->sc_float;
-    if (ss.fail())
-      sc_vals->sc_float_impossible = 1;
+    if (sc_stat==SC_STATUS_CHAR)
+    {
+      sc_vals->sc_float = static_cast<float>(num.at(0));//can fail?
+    }
+    else {
+      std::stringstream ss(num);
+      ss >> sc_vals->sc_float;
+      if (ss.fail())
+        sc_vals->sc_float_impossible = 1;
+      }
   }
   if (sc_stat != SC_STATUS_DOUBLE) {
+    if (sc_stat==SC_STATUS_CHAR)
+    {
+      sc_vals->sc_double = static_cast<double>(num.at(0));
+    }
+    else {
     std::stringstream ss(num);
     ss >> sc_vals->sc_double;
     if (ss.fail())
       sc_vals->sc_double_impossible = 1;
+    }
   }
 }
 
 void DisplayResults(t_scalar_convert_status sc_stat, t_scalar_values *sc_vals) {
 
   (void)sc_stat;
+  //display char:
   if (sc_vals->sc_char_impossible)
     std::cout << "char: " << "impossible\n";
   else if (sc_vals->sc_char_non_print)
     std::cout << "char: " << "Not displayable\n";
   else
     std::cout << "char: " << sc_vals->sc_char << "\n";
-
+  //display int:
   if (sc_vals->sc_int_impossible)
     std::cout << "int: " << "impossible\n";
   else
     std::cout << "int: " << sc_vals->sc_int << "\n";
-
+  //display float:
   if (sc_vals->sc_float_impossible)
     std::cout << "float: " << "impossible\n";
+  else if (sc_vals->sc_nanf)
+    std::cout << "float: " << "nanf\n";
   else
     std::cout << "float: " << sc_vals->sc_float << "f\n";
-
+  //display double:
   if (sc_vals->sc_double_impossible)
     std::cout << "double: " << "impossible\n";
+  else if (sc_vals->sc_nan)
+    std::cout << "double: " << "nan\n";
   else
     std::cout << "double: " << sc_vals->sc_double << "\n";
 }
