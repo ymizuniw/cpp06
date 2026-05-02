@@ -1,8 +1,5 @@
 #include "ScalarConverter.hpp"
 #include <cctype>
-#include <cstring>
-#include <exception>
-#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -46,7 +43,7 @@ t_scalar_convert_status validate_num(std::string num)
       i++;
     while(i<num.length())
     {
-        if (!std::isdigit(num.at(i)))
+        if (!std::isdigit(static_cast<unsigned char>(num.at(i))))
             break;
         i++;
     }
@@ -57,7 +54,7 @@ t_scalar_convert_status validate_num(std::string num)
         i++;
         if (i==num.length())
             return (SC_STATUS_DOUBLE);
-        else if (num.at(i)!='f' && !std::isdigit(num.at(i)))
+        else if (num.at(i)!='f' && !std::isdigit(static_cast<unsigned char>(num.at(i))))
             return (SC_STATUS_ERROR);
     }
     if (num.at(i)=='f')
@@ -71,7 +68,7 @@ t_scalar_convert_status validate_num(std::string num)
     // fractional part
     while(i<num.length())
     {
-        if (!std::isdigit(num.at(i)))
+        if (!std::isdigit(static_cast<unsigned char>(num.at(i))))
             break;
         i++;
     }
@@ -90,7 +87,7 @@ t_scalar_convert_status validate_num(std::string num)
 
 int validate_char(std::string num)
 {
-    if(num.length()==1 && !std::isdigit(num.at(0)))
+    if(num.length()==1 && !std::isdigit(static_cast<unsigned char>(num.at(0))))
         return (1);
     return (0);
 }
@@ -99,6 +96,8 @@ t_scalar_convert_status DetectType(std::string num) {
 
   t_scalar_convert_status num_type = SC_STATUS_ERROR;
 
+  if (num.empty())
+    return (num_type);
   if (num == "-inff")
     num_type = SC_STATUS_MINUS_INFF;
   else if (num == "-inf")
@@ -110,7 +109,7 @@ t_scalar_convert_status DetectType(std::string num) {
   else if (num == "nanf")
     num_type = SC_STATUS_NANF;
   else if (num == "nan")
-    num_type = SC_STATUS_NANF;
+    num_type = SC_STATUS_NAN;
   else if (validate_char(num))
     num_type = SC_STATUS_CHAR;
   else
@@ -118,137 +117,215 @@ t_scalar_convert_status DetectType(std::string num) {
   return (num_type);
 }
 
-void ConvertActual(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
-                   std::string num) {
-
+void ConvertDecimalToInt(t_scalar_values *sc_vals, const std::string &num)
+{
   std::stringstream ss(num);
+  ss >> sc_vals->sc_int;
+  if (ss.fail())
+    sc_vals->sc_int_impossible = 1;
+}
 
-  // NORMAL TYPES SWITCH CASE
-  switch (static_cast<int>(sc_stat)) {
-  case SC_STATUS_CHAR:
-    if (!std::isprint(num.at(0)))
-      sc_vals->sc_char_non_print = 1;
-    else
-      ss >> sc_vals->sc_char;
-    break;
-  case SC_STATUS_INT:
-    ss >> sc_vals->sc_int;
-    if (ss.fail())
+void ConvertDecimalToFloat(t_scalar_values *sc_vals,std::string &num)
+{
+  if (num.back()=='f')
+    num = num.substr(0, num.size()-1);
+  std::stringstream ss(num);
+  ss >> sc_vals->sc_float;
+  if (ss.fail())
+    sc_vals->sc_float_impossible = 1;         
+}
+
+void ConvertDecimalToDouble(t_scalar_values *sc_vals, const std::string &num)
+{
+  std::stringstream ss(num);
+  ss >> sc_vals->sc_double;
+  if (ss.fail())
+    sc_vals->sc_double_impossible = 1;
+}
+
+void ConvertActual(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
+                   std::string &num) {
+
+  switch (static_cast<int>(sc_stat)) 
+  {
+    case SC_STATUS_ERROR:
+      return ;
+    case SC_STATUS_CHAR:
+    {
+      if (!std::isprint(static_cast<unsigned char>(num.at(0))))
+        sc_vals->sc_char_non_print = 1;
+      else
+        sc_vals->sc_char = num.at(0);
+      return;
+    }
+    case SC_STATUS_INT:
+      ConvertDecimalToInt(sc_vals,num);
+      return;
+    case SC_STATUS_FLOAT:
+      ConvertDecimalToFloat(sc_vals, num);
+      return;
+    case SC_STATUS_DOUBLE:
+      ConvertDecimalToDouble(sc_vals, num);
+      return;
+    case SC_STATUS_MINUS_INFF:
+      sc_vals->sc_float = -std::numeric_limits<float>::infinity();
+      return;
+    case SC_STATUS_PLUS_INFF:
+      sc_vals->sc_float = std::numeric_limits<float>::infinity();
+      return;
+    case SC_STATUS_MINUS_INF:
+      sc_vals->sc_double = -std::numeric_limits<double>::infinity();
+      return;
+    case SC_STATUS_PLUS_INF:
+      sc_vals->sc_double = std::numeric_limits<double>::infinity();
+      return;
+    case SC_STATUS_NANF:
+      sc_vals->sc_nanf = 1;
+      return;
+    case SC_STATUS_NAN:
+      sc_vals->sc_nan = 1;
+      return;
+    }
+}
+
+void ConvertSpecialStatus(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat)
+{
+  switch (static_cast<int>(sc_stat)) 
+  {
+    case SC_STATUS_ERROR:
+      sc_vals->sc_char_impossible = 1;
       sc_vals->sc_int_impossible = 1;
-    break;
-  case SC_STATUS_FLOAT:
-    ss >> sc_vals->sc_float;
-    if (ss.fail())
       sc_vals->sc_float_impossible = 1;
-    break;
-  case SC_STATUS_DOUBLE:
-    ss >> sc_vals->sc_double;
-    if (ss.fail())
       sc_vals->sc_double_impossible = 1;
-    break;
-  case SC_STATUS_MINUS_INFF:
-    sc_vals->sc_float = -std::numeric_limits<float>::infinity();
-    break;
-  case SC_STATUS_PLUS_INFF:
-    sc_vals->sc_float = std::numeric_limits<float>::infinity();
-    break;
-  case SC_STATUS_MINUS_INF:
-    sc_vals->sc_double = -std::numeric_limits<double>::infinity();
-    break;
-  case SC_STATUS_PLUS_INF:
-    sc_vals->sc_double = std::numeric_limits<double>::infinity();
-    break;
-  case SC_STATUS_NANF:
-    sc_vals->sc_nanf = 1;
-    break;
-  case SC_STATUS_NAN:
-    sc_vals->sc_nan = 1;
-    break;
+      return;
+    case SC_STATUS_MINUS_INFF:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_double = -std::numeric_limits<double>::infinity();
+      return;
+    case SC_STATUS_PLUS_INFF:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_double = std::numeric_limits<double>::infinity();
+      return;
+    case SC_STATUS_MINUS_INF:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_float = -std::numeric_limits<float>::infinity();
+      return;
+    case SC_STATUS_PLUS_INF:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_float = std::numeric_limits<float>::infinity();
+      return;
+    case SC_STATUS_NANF:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_nan  = 1;
+      return;
+    case SC_STATUS_NAN:
+      sc_vals->sc_char_impossible = 1;
+      sc_vals->sc_int_impossible = 1;
+      sc_vals->sc_nanf = 1;
+      return;
+    }
+}
+
+void ConvertIntToChar(t_scalar_values *sc_vals)
+{
+  if (!(0<=sc_vals->sc_int && sc_vals->sc_int<=127))
+    sc_vals->sc_char_impossible = 1;
+  else if (std::isprint(static_cast<unsigned char>(sc_vals->sc_int)))
+    sc_vals->sc_char = static_cast<char>(sc_vals->sc_int);
+  else
+   sc_vals->sc_char_non_print=1;
+}
+
+void ConvertFloatToChar(t_scalar_values *sc_vals)
+{
+  if (!(0.0f<=sc_vals->sc_float && sc_vals->sc_float<128.0f))
+  {
+    sc_vals->sc_char_impossible = 1;
+    return ;
   }
+  int tmp = static_cast<int>(sc_vals->sc_float);
+  if (std::isprint(static_cast<unsigned char>(tmp)))
+    sc_vals->sc_char = static_cast<char>(tmp);
+  else
+   sc_vals->sc_char_non_print=1;
+}
+
+void ConvertDoubleToChar(t_scalar_values *sc_vals)
+{
+  if (!(0.0<=sc_vals->sc_double && sc_vals->sc_double<128.0))
+  {
+    sc_vals->sc_char_impossible = 1;
+    return ;
+  }
+  int tmp = static_cast<int>(sc_vals->sc_double);
+  if (std::isprint(static_cast<unsigned char>(tmp)))
+    sc_vals->sc_char = static_cast<char>(tmp);
+  else
+   sc_vals->sc_char_non_print=1;
+}
+
+void ConvertCharToOthers(t_scalar_values *sc_vals, const std::string &num)
+{
+  sc_vals->sc_int = static_cast<int>(num.at(0));
+  sc_vals->sc_float = static_cast<float>(num.at(0));
+  sc_vals->sc_double = static_cast<double>(num.at(0));
+}
+
+void ConvertRegularStatus(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
+                   const std::string &num)
+{
+  switch(static_cast<int>(sc_stat))
+  {
+    case SC_STATUS_CHAR://convert to except char type
+      ConvertCharToOthers(sc_vals, num);
+      return ;
+    case SC_STATUS_INT:
+      ConvertIntToChar(sc_vals);
+      ConvertDecimalToFloat(sc_vals, const_cast<std::string &>(num));
+      ConvertDecimalToDouble(sc_vals, num);
+      return ;
+    case SC_STATUS_FLOAT:
+      ConvertFloatToChar(sc_vals);
+      ConvertDecimalToInt(sc_vals, num);
+      ConvertDecimalToDouble(sc_vals, num);
+      return ;
+    case SC_STATUS_DOUBLE:
+      ConvertDoubleToChar(sc_vals);
+      ConvertDecimalToInt(sc_vals, num);
+      ConvertDecimalToFloat(sc_vals, const_cast<std::string &>(num));
+      return ;
+    }
+}
+
+int IsSpecialStatus(t_scalar_convert_status sc_stat)
+{
+  switch(static_cast<int>(sc_stat))
+  {
+    case SC_STATUS_ERROR:
+    case SC_STATUS_MINUS_INFF:
+    case SC_STATUS_PLUS_INFF:
+    case SC_STATUS_MINUS_INF:
+    case SC_STATUS_PLUS_INF:
+    case SC_STATUS_NANF:
+    case SC_STATUS_NAN:
+      return (1);
+  }
+  return (0);
 }
 
 void ConvertOthers(t_scalar_values *sc_vals, t_scalar_convert_status sc_stat,
-                   std::string num) {
-
-  if (sc_stat == SC_STATUS_MINUS_INFF || sc_stat == SC_STATUS_PLUS_INFF ||
-      sc_stat == SC_STATUS_MINUS_INF || sc_stat == SC_STATUS_PLUS_INF ||
-      sc_stat == SC_STATUS_NANF || sc_stat == SC_STATUS_NAN) {
-    sc_vals->sc_char_impossible = 1;
-    sc_vals->sc_int_impossible = 1;
-    switch (static_cast<int>(sc_stat)) {
-    case SC_STATUS_MINUS_INFF:
-      sc_vals->sc_double = -std::numeric_limits<double>::infinity();
-      break;
-    case SC_STATUS_PLUS_INFF:
-      sc_vals->sc_double = std::numeric_limits<double>::infinity();
-      break;
-    case SC_STATUS_MINUS_INF:
-      sc_vals->sc_float = -std::numeric_limits<float>::infinity();
-      break;
-    case SC_STATUS_PLUS_INF:
-      sc_vals->sc_float = std::numeric_limits<float>::infinity();
-      break;
-    case SC_STATUS_NANF:
-      sc_vals->sc_nan  = 1;
-      break;
-    case SC_STATUS_NAN:
-      sc_vals->sc_nanf = 1;
-      break;
-    }
-    return;
-  }
-  if (sc_stat != SC_STATUS_CHAR) {
-    std::stringstream ss(num);
-    int sc_char_num;
-    ss >> sc_char_num;
-    if (ss.fail())
-      sc_vals->sc_char_impossible = 1;
-    else if (!std::isprint(static_cast<char>(sc_char_num)))
-      sc_vals->sc_char_non_print = 1;
-    else
-      sc_vals->sc_char = static_cast<char>(sc_char_num);
-  }
-  if (sc_stat != SC_STATUS_INT) {
-    if (sc_stat==SC_STATUS_CHAR)
-    {
-      sc_vals->sc_int = static_cast<int>(num.at(0));//can fail?
-    }
-    else {
-      std::stringstream ss(num);
-      ss >> sc_vals->sc_int;
-      if (ss.fail())
-        sc_vals->sc_int_impossible = 1;
-    }
-  }
-  if (sc_stat != SC_STATUS_FLOAT) {
-    if (sc_stat==SC_STATUS_CHAR)
-    {
-      sc_vals->sc_float = static_cast<float>(num.at(0));//can fail?
-    }
-    else {
-      std::stringstream ss(num);
-      ss >> sc_vals->sc_float;
-      if (ss.fail())
-        sc_vals->sc_float_impossible = 1;
-      }
-  }
-  if (sc_stat != SC_STATUS_DOUBLE) {
-    if (sc_stat==SC_STATUS_CHAR)
-    {
-      sc_vals->sc_double = static_cast<double>(num.at(0));
-    }
-    else {
-    std::stringstream ss(num);
-    ss >> sc_vals->sc_double;
-    if (ss.fail())
-      sc_vals->sc_double_impossible = 1;
-    }
-  }
+                   std::string &num) {
+    if (IsSpecialStatus(sc_stat))
+      ConvertSpecialStatus(sc_vals, sc_stat);
+    ConvertRegularStatus(sc_vals,  sc_stat, num);
 }
 
-void DisplayResults(t_scalar_convert_status sc_stat, t_scalar_values *sc_vals) {
-
-  (void)sc_stat;
+void DisplayResults(t_scalar_values *sc_vals) {
   //display char:
   if (sc_vals->sc_char_impossible)
     std::cout << "char: " << "impossible\n";
@@ -279,15 +356,10 @@ void DisplayResults(t_scalar_convert_status sc_stat, t_scalar_values *sc_vals) {
 
 void ScalarConverter::convert(std::string num) {
   t_scalar_convert_status sc_stat = DetectType(num);
-  t_scalar_values *sc_vals = new (t_scalar_values);
-  memset(sc_vals, 0, sizeof(t_scalar_values));
-  try {
-    ConvertActual(sc_vals, sc_stat, num);
-    ConvertOthers(sc_vals, sc_stat, num);
-    DisplayResults(sc_stat, sc_vals);
-  } catch (...) {
-    delete sc_vals;
-    return;
-  }
-  delete sc_vals;
+  t_scalar_values sc_vals = {};
+  ConvertActual(&sc_vals, sc_stat, num);
+  if (sc_vals.sc_double_impossible)
+    sc_stat = SC_STATUS_ERROR;
+  ConvertOthers(&sc_vals, sc_stat, num);
+  DisplayResults(&sc_vals);
 }
