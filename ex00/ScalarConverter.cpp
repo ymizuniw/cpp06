@@ -127,7 +127,7 @@ void ConvertDecimalToInt(t_scalar_values *sc_vals, const std::string &num)
 
 void ConvertDecimalToFloat(t_scalar_values *sc_vals,std::string &num)
 {
-  if (num.back()=='f')
+  if (num[num.size() - 1] == 'f')
     num = num.substr(0, num.size()-1);
   std::stringstream ss(num);
   ss >> sc_vals->sc_float;
