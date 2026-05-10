@@ -1,4 +1,10 @@
 *.o
+<<<<<<< HEAD
 
 .clang-format
 .vscode/
+=======
+.clang-format
+.vscode/
+*.md
+>>>>>>> origin
