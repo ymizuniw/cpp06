@@ -3,8 +3,6 @@
 #include <cstdio>
 #include <iostream>
 
-using namespace std;
-
 int main(void) {
   Data data;
   data.val = 0;
