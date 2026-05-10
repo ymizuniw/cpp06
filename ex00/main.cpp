@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   char const *special_args[] = {"-inff", "+inff", "-inf", "+inff",
                                 "nanf",  "nan",   NULL};
   char const *regular_args[] = {
-      "", "a", "1", "100", "1.5f", "1.5", "999999999999999.0", NULL};
+      "", "a", "1", "100", "1.5f", "1.5", "999999999999999.0", "\'", NULL};
   char const **sp_ptr = special_args;
   while (*sp_ptr) {
     std::cout << "\n=======================\n" << std::endl;

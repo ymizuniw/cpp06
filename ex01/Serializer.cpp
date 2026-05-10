@@ -1,6 +1,7 @@
 #include "Serializer.hpp"
 
 #include <cstddef>
+#include <stdint.h>
 
 uintptr_t Serializer::serialize(Data *ptr){
     if (ptr==NULL)

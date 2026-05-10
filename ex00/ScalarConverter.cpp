@@ -262,7 +262,7 @@ void ConvertRegularStatus(t_scalar_values *sc_vals,
                           t_scalar_convert_status sc_stat,
                           const std::string &num) {
   switch (static_cast<int>(sc_stat)) {
-  case SC_STATUS_CHAR: // convert to except char type
+  case SC_STATUS_CHAR:
     ConvertCharToOthers(sc_vals, num);
     return;
   case SC_STATUS_INT:

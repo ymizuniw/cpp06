@@ -1,7 +1,7 @@
 #ifndef SERIALIZER_HPP
 #define SERIALIZER_HPP
 
-typedef unsigned long int uintptr_t;
+#include <stdint.h>
 struct Data;
 
 class Serializer{

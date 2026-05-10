@@ -1,6 +1,6 @@
 NAME = serialize
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -g -std=c++98 -pedantic-errors
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -g -fsanitize=address
 
 SRCS = Serializer.cpp main.cpp
 OBJS=$(SRCS:.cpp=.o)
