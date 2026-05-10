@@ -9,7 +9,7 @@ INC = -I.
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-.PHONEY: all clean fclean re
+.PHONY: all clean fclean re
 
 all: $(NAME)
 
